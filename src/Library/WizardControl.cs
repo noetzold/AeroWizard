@@ -476,10 +476,36 @@ namespace AeroWizard
 			base.OnParentChanged(e);
 			if (parentForm != null)
 				parentForm.Load -= parentForm_Load;
-			parentForm = base.Parent as Form; // FindForm();
-			Dock = DockStyle.Fill;
-			if (parentForm != null)
-				parentForm.Load += parentForm_Load;
+
+			Control parentObj = base.Parent;
+
+			if (!(base.Parent is Form))
+				titleBar.Visible = false;
+
+			while (!(parentObj is Form))
+			{
+				if (parentObj.Parent != null)
+					parentObj = parentObj.Parent;
+				else
+					break;
+			}
+
+			if (parentObj is Form)
+			{
+				parentForm = (Form)parentObj;
+				Dock = DockStyle.Fill;
+				if (parentForm != null)
+					parentForm.Load += parentForm_Load;
+			}
+			else
+			{
+				parentObj.ParentChanged += ParentObj_ParentChanged;
+			}
+		}
+
+		private void ParentObj_ParentChanged(object sender, EventArgs e)
+		{
+			OnParentChanged(e);
 		}
 
 		/// <summary>
@@ -568,7 +594,7 @@ namespace AeroWizard
 					//	parentForm.SetWindowAttribute(DesktopWindowManager.SetWindowAttr.NonClientRenderingPolicy, DesktopWindowManager.NonClientRenderingPolicy.Enabled);
 					//parentForm.ExtendFrameIntoClientArea(new Padding(0));
 					//NativeMethods.SetWindowPos(this.Handle, IntPtr.Zero, this.Location.X, this.Location.Y, this.Width, this.Height, NativeMethods.SetWindowPosFlags.FrameChanged);
-					parentForm?.ExtendFrameIntoClientArea(new Padding(0) {Top = titleBar.Visible ? titleBar.Height : 0});
+					parentForm?.ExtendFrameIntoClientArea(new Padding(0) { Top = titleBar.Visible ? titleBar.Height : 0 });
 				}
 				catch
 				{
